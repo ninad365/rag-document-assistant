@@ -47,17 +47,22 @@ with st.sidebar:
         )
         if res.ok:
             st.session_state.documents = res.json()
+        else:
+            st.error(res.text)
 
     for doc in st.session_state.get("documents", []):
         cols = st.columns([4, 1])
         cols[0].write(f"{doc['source']} ({doc['document_id']})")
         if cols[1].button("Delete", key=doc["document_id"]):
-            requests.delete(
+            delete_res = requests.delete(
                 f"{BACKEND_URL}/documents/{doc['document_id']}",
                 headers={"X-API-Key": api_key},
                 timeout=30,
             )
-            st.rerun()
+            if delete_res.ok:
+                st.rerun()
+            else:
+                st.error(delete_res.text)
 
 tab_chat, tab_eval = st.tabs(["Chat", "Evaluation"])
 

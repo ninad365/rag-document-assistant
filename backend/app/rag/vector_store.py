@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
 
