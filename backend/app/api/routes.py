@@ -1,4 +1,5 @@
 from fastapi import APIRouter, File, Form, Header, HTTPException, Query, UploadFile
+from openai import AuthenticationError
 
 from app.core.config import DEFAULT_CHUNK_OVERLAP, DEFAULT_CHUNK_SIZE
 from app.evaluation.evaluator import Evaluator
@@ -15,6 +16,13 @@ from app.rag.qa import RagService
 router = APIRouter()
 rag_service = RagService()
 evaluator = Evaluator(rag_service)
+
+
+def run_with_api_key_error_handling(action):
+    try:
+        return action()
+    except AuthenticationError as exc:
+        raise HTTPException(status_code=400, detail="Invalid API key") from exc
 
 
 def resolve_api_key(x_api_key: str | None, api_key: str | None) -> str:
@@ -47,7 +55,9 @@ async def upload_documents(
             raise HTTPException(status_code=400, detail=f"Unsupported file: {file.filename}")
         payload.append((file.filename, await file.read()))
 
-    return rag_service.index_files(payload, resolved_api_key, chunk_size, chunk_overlap)
+    return run_with_api_key_error_handling(
+        lambda: rag_service.index_files(payload, resolved_api_key, chunk_size, chunk_overlap)
+    )
 
 
 @router.get("/documents", response_model=list[DocumentRecord])
@@ -56,7 +66,7 @@ def list_documents(
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
 ) -> list[dict[str, str]]:
     resolved_api_key = resolve_api_key(x_api_key, api_key)
-    return rag_service.list_documents(resolved_api_key)
+    return run_with_api_key_error_handling(lambda: rag_service.list_documents(resolved_api_key))
 
 
 @router.delete("/documents/{document_id}")
@@ -66,20 +76,22 @@ def delete_document(
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
 ) -> dict:
     resolved_api_key = resolve_api_key(x_api_key, api_key)
-    deleted = rag_service.delete_document(resolved_api_key, document_id)
+    deleted = run_with_api_key_error_handling(lambda: rag_service.delete_document(resolved_api_key, document_id))
     return {"deleted_chunks": deleted}
 
 
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> dict:
-    return rag_service.chat(
-        api_key=request.api_key,
-        question=request.question,
-        history=request.history,
-        top_k=request.top_k,
+    return run_with_api_key_error_handling(
+        lambda: rag_service.chat(
+            api_key=request.api_key,
+            question=request.question,
+            history=request.history,
+            top_k=request.top_k,
+        )
     )
 
 
 @router.post("/evaluation/run", response_model=EvaluationResponse)
 def run_evaluation(request: EvaluationRequest) -> dict:
-    return evaluator.run(request.api_key, request.dataset, request.top_k)
+    return run_with_api_key_error_handling(lambda: evaluator.run(request.api_key, request.dataset, request.top_k))

@@ -28,17 +28,20 @@ with st.sidebar:
             files = [("files", (f.name, f.read(), "application/pdf")) for f in uploads]
             data = {"chunk_size": chunk_size, "chunk_overlap": chunk_overlap}
             headers = {"X-API-Key": api_key}
-            res = requests.post(
-                f"{BACKEND_URL}/documents/upload",
-                files=files,
-                data=data,
-                headers=headers,
-                timeout=120,
-            )
-            if res.ok:
-                st.success(f"Indexed {res.json()['chunks_added']} chunks")
-            else:
-                st.error(res.text)
+            try:
+                res = requests.post(
+                    f"{BACKEND_URL}/documents/upload",
+                    files=files,
+                    data=data,
+                    headers=headers,
+                    timeout=120,
+                )
+                if res.ok:
+                    st.success(f"Indexed {res.json()['chunks_added']} chunks")
+                else:
+                    st.error(res.text)
+            except:
+                st.error("Backend server is not available.")
 
     if st.button("Refresh documents") and api_key:
         res = requests.get(
@@ -77,7 +80,7 @@ with tab_chat:
         if not api_key:
             st.error("Provide your OpenAI API key in the sidebar.")
             st.stop()
-            
+
         st.session_state.history.append({"role": "user", "content": user_q})
         payload = {
             "api_key": api_key,
