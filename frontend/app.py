@@ -99,7 +99,7 @@ with tab_eval:
     if st.button("Run evaluation"):
         try:
             dataset = json.loads(sample)
-        except Exception:
+        except json.JSONDecodeError:
             st.error("Invalid JSON")
         else:
             payload = {"api_key": api_key, "dataset": dataset, "top_k": int(top_k)}

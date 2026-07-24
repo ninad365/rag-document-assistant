@@ -51,8 +51,6 @@ class Evaluator:
         )
 
     def run(self, api_key: str, dataset: list[EvaluationQuestion], top_k: int) -> dict:
-        if not dataset:
-            raise ValueError("Cannot evaluate empty dataset")
         rows = []
         for item in dataset:
             response = self.rag_service.chat(api_key, item.question, history=[], top_k=top_k)

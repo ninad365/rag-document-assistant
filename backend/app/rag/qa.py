@@ -13,6 +13,13 @@ from app.rag.vector_store import get_vector_store, unique_documents
 
 
 class RagService:
+    @staticmethod
+    def _result_text(result: Any, action: str) -> str:
+        content = getattr(result, "content", None)
+        if not isinstance(content, str):
+            raise RuntimeError(f"Unexpected LLM response while {action}")
+        return content.strip()
+
     def index_files(
         self,
         files: list[tuple[str, bytes]],
@@ -54,7 +61,7 @@ class RagService:
             return question
         llm = ChatOpenAI(model="gpt-4o-mini", api_key=api_key, temperature=0)
         prompt = build_rewrite_prompt([msg.model_dump() for msg in history], question)
-        return llm.invoke(prompt).content.strip()
+        return self._result_text(llm.invoke(prompt), "rewriting follow-up question")
 
     def chat(
         self,
@@ -90,7 +97,10 @@ class RagService:
             }
 
         llm = ChatOpenAI(model="gpt-4o-mini", api_key=api_key, temperature=0)
-        answer = llm.invoke(build_answer_prompt("\n\n".join(context_lines), standalone_question)).content.strip()
+        answer = self._result_text(
+            llm.invoke(build_answer_prompt("\n\n".join(context_lines), standalone_question)),
+            "generating answer",
+        )
 
         return {
             "answer": answer,
