@@ -14,7 +14,7 @@ if "history" not in st.session_state:
 
 with st.sidebar:
     st.header("Settings")
-    api_key = st.text_input("OpenAI API Key", type="password")
+    api_key = st.text_input("Groq API Key", type="password")
     chunk_size = st.number_input("Chunk size", min_value=200, max_value=4000, value=1000, step=100)
     chunk_overlap = st.number_input("Chunk overlap", min_value=0, max_value=1000, value=150, step=10)
     top_k = st.number_input("Top-K", min_value=1, max_value=20, value=4)
@@ -28,17 +28,20 @@ with st.sidebar:
             files = [("files", (f.name, f.read(), "application/pdf")) for f in uploads]
             data = {"chunk_size": chunk_size, "chunk_overlap": chunk_overlap}
             headers = {"X-API-Key": api_key}
-            res = requests.post(
-                f"{BACKEND_URL}/documents/upload",
-                files=files,
-                data=data,
-                headers=headers,
-                timeout=120,
-            )
-            if res.ok:
-                st.success(f"Indexed {res.json()['chunks_added']} chunks")
-            else:
-                st.error(res.text)
+            try:
+                res = requests.post(
+                    f"{BACKEND_URL}/documents/upload",
+                    files=files,
+                    data=data,
+                    headers=headers,
+                    timeout=120,
+                )
+                if res.ok:
+                    st.success(f"Indexed {res.json()['chunks_added']} chunks")
+                else:
+                    st.error(res.text)
+            except:
+                st.error("Backend server is not available.")
 
     if st.button("Refresh documents") and api_key:
         res = requests.get(
@@ -75,9 +78,9 @@ with tab_chat:
     user_q = st.chat_input("Ask a question about uploaded PDFs")
     if user_q:
         if not api_key:
-            st.error("Provide your OpenAI API key in the sidebar.")
+            st.error("Provide your Groq API key in the sidebar.")
             st.stop()
-            
+
         st.session_state.history.append({"role": "user", "content": user_q})
         payload = {
             "api_key": api_key,

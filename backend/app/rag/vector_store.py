@@ -1,15 +1,15 @@
 from collections.abc import Iterable
 
 from langchain_chroma import Chroma
-from langchain_openai import OpenAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
 from app.core.config import CHROMA_DIR
 
 COLLECTION_NAME = "rag_documents"
+EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
-
-def get_vector_store(api_key: str) -> Chroma:
-    embeddings = OpenAIEmbeddings(api_key=api_key)
+def get_vector_store() -> Chroma:
+    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
     return Chroma(
         collection_name=COLLECTION_NAME,
         embedding_function=embeddings,

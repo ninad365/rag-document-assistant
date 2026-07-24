@@ -2,7 +2,7 @@ import time
 import uuid
 from typing import Any
 
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 
 from app.core.config import DEFAULT_TOP_K
 from app.models.schemas import ChatMessage
@@ -10,6 +10,8 @@ from app.rag.chunking import chunk_documents
 from app.rag.document_loader import extract_pdf_pages
 from app.rag.prompts import build_answer_prompt, build_rewrite_prompt
 from app.rag.vector_store import get_vector_store, unique_documents
+
+GROQ_MODEL_NAME = "llama-3.1-8b-instant"
 
 
 class RagService:
@@ -27,7 +29,7 @@ class RagService:
         chunk_size: int,
         chunk_overlap: int,
     ) -> dict[str, Any]:
-        vector_store = get_vector_store(api_key)
+        vector_store = get_vector_store()
         all_chunks = []
         indexed = []
 
@@ -44,12 +46,12 @@ class RagService:
         return {"indexed_documents": indexed, "chunks_added": len(all_chunks)}
 
     def list_documents(self, api_key: str) -> list[dict[str, str]]:
-        vector_store = get_vector_store(api_key)
+        vector_store = get_vector_store()
         payload = vector_store.get(include=["metadatas"])
         return unique_documents(payload.get("metadatas", []))
 
     def delete_document(self, api_key: str, document_id: str) -> int:
-        vector_store = get_vector_store(api_key)
+        vector_store = get_vector_store()
         payload = vector_store.get(where={"document_id": document_id}, include=["metadatas"])
         ids = payload.get("ids", [])
         if ids:
@@ -59,7 +61,7 @@ class RagService:
     def _rewrite_question(self, api_key: str, history: list[ChatMessage], question: str) -> str:
         if not history:
             return question
-        llm = ChatOpenAI(model="gpt-4o-mini", api_key=api_key, temperature=0)
+        llm = ChatGroq(model=GROQ_MODEL_NAME, api_key=api_key, temperature=0)
         prompt = build_rewrite_prompt([msg.model_dump() for msg in history], question)
         return self._result_text(llm.invoke(prompt), "rewriting follow-up question")
 
@@ -73,7 +75,7 @@ class RagService:
         t0 = time.perf_counter()
         standalone_question = self._rewrite_question(api_key, history, question)
 
-        vector_store = get_vector_store(api_key)
+        vector_store = get_vector_store()
         results = vector_store.similarity_search_with_relevance_scores(standalone_question, k=top_k)
         chunks = []
         context_lines = []
@@ -96,7 +98,7 @@ class RagService:
                 "latency_ms": (time.perf_counter() - t0) * 1000,
             }
 
-        llm = ChatOpenAI(model="gpt-4o-mini", api_key=api_key, temperature=0)
+        llm = ChatGroq(model=GROQ_MODEL_NAME, api_key=api_key, temperature=0)
         answer = self._result_text(
             llm.invoke(build_answer_prompt("\n\n".join(context_lines), standalone_question)),
             "generating answer",
