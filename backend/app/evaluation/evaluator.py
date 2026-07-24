@@ -88,7 +88,9 @@ class Evaluator:
                 }
             )
 
-        n = max(len(rows), 1)
+        if not rows:
+            raise ValueError("No evaluation results were produced")
+        n = len(rows)
         summary = {
             "hit_rate_at_k": sum(r["hit_rate_at_k"] for r in rows) / n,
             "precision_at_k": sum(r["precision_at_k"] for r in rows) / n,

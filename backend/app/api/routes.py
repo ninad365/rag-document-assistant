@@ -17,6 +17,13 @@ rag_service = RagService()
 evaluator = Evaluator(rag_service)
 
 
+def resolve_api_key(x_api_key: str | None, api_key: str | None) -> str:
+    resolved_api_key = x_api_key or api_key
+    if not resolved_api_key:
+        raise HTTPException(status_code=400, detail="API key is required")
+    return resolved_api_key
+
+
 @router.get("/health")
 def health() -> dict:
     return {"status": "ok"}
@@ -30,9 +37,7 @@ async def upload_documents(
     chunk_overlap: int = Form(DEFAULT_CHUNK_OVERLAP),
     files: list[UploadFile] = File(...),
 ):
-    resolved_api_key = x_api_key or api_key
-    if not resolved_api_key:
-        raise HTTPException(status_code=400, detail="API key is required")
+    resolved_api_key = resolve_api_key(x_api_key, api_key)
     if not files:
         raise HTTPException(status_code=400, detail="At least one PDF is required")
 
@@ -50,9 +55,7 @@ def list_documents(
     api_key: str | None = Query(default=None),
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
 ) -> list[dict[str, str]]:
-    resolved_api_key = x_api_key or api_key
-    if not resolved_api_key:
-        raise HTTPException(status_code=400, detail="API key is required")
+    resolved_api_key = resolve_api_key(x_api_key, api_key)
     return rag_service.list_documents(resolved_api_key)
 
 
@@ -62,9 +65,7 @@ def delete_document(
     api_key: str | None = Query(default=None),
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
 ) -> dict:
-    resolved_api_key = x_api_key or api_key
-    if not resolved_api_key:
-        raise HTTPException(status_code=400, detail="API key is required")
+    resolved_api_key = resolve_api_key(x_api_key, api_key)
     deleted = rag_service.delete_document(resolved_api_key, document_id)
     return {"deleted_chunks": deleted}
 
