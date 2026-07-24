@@ -78,7 +78,7 @@ with tab_chat:
     user_q = st.chat_input("Ask a question about uploaded PDFs")
     if user_q:
         if not api_key:
-            st.error("Provide your OpenAI API key in the sidebar.")
+            st.error("Provide your Groq API key in the sidebar.")
             st.stop()
 
         st.session_state.history.append({"role": "user", "content": user_q})
