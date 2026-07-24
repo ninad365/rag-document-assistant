@@ -98,7 +98,4 @@ class Evaluator:
             "unanswerable_accuracy": sum(r["unanswerable_accuracy"] for r in rows) / n,
         }
 
-        for row in rows:
-            row.pop("unanswerable_accuracy")
-
         return {"summary": summary, "results": rows}

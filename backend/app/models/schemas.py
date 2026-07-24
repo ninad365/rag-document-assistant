@@ -53,7 +53,7 @@ class EvaluationQuestion(BaseModel):
 
 class EvaluationRequest(BaseModel):
     api_key: str = Field(min_length=10)
-    dataset: list[EvaluationQuestion]
+    dataset: list[EvaluationQuestion] = Field(min_length=1)
     top_k: int = Field(default=4, ge=1, le=20)
 
 
@@ -72,6 +72,7 @@ class EvaluationResult(BaseModel):
     faithfulness: float
     answer_relevance: float
     citation_correctness: float
+    unanswerable_accuracy: float
 
 
 class EvaluationSummary(BaseModel):
