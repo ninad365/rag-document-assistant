@@ -40,7 +40,11 @@ with st.sidebar:
                 st.error(res.text)
 
     if st.button("Refresh documents") and api_key:
-        res = requests.get(f"{BACKEND_URL}/documents", params={"api_key": api_key}, timeout=30)
+        res = requests.get(
+            f"{BACKEND_URL}/documents",
+            headers={"X-API-Key": api_key},
+            timeout=30,
+        )
         if res.ok:
             st.session_state.documents = res.json()
 
@@ -50,7 +54,7 @@ with st.sidebar:
         if cols[1].button("Delete", key=doc["document_id"]):
             requests.delete(
                 f"{BACKEND_URL}/documents/{doc['document_id']}",
-                params={"api_key": api_key},
+                headers={"X-API-Key": api_key},
                 timeout=30,
             )
             st.rerun()

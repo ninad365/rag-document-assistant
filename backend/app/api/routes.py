@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, Header, HTTPException, Query, UploadFile
 
 from app.core.config import DEFAULT_CHUNK_OVERLAP, DEFAULT_CHUNK_SIZE
 from app.evaluation.evaluator import Evaluator
@@ -46,13 +46,26 @@ async def upload_documents(
 
 
 @router.get("/documents", response_model=list[DocumentRecord])
-def list_documents(api_key: str) -> list[dict[str, str]]:
-    return rag_service.list_documents(api_key)
+def list_documents(
+    api_key: str | None = Query(default=None),
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+) -> list[dict[str, str]]:
+    resolved_api_key = x_api_key or api_key
+    if not resolved_api_key:
+        raise HTTPException(status_code=400, detail="API key is required")
+    return rag_service.list_documents(resolved_api_key)
 
 
 @router.delete("/documents/{document_id}")
-def delete_document(document_id: str, api_key: str) -> dict:
-    deleted = rag_service.delete_document(api_key, document_id)
+def delete_document(
+    document_id: str,
+    api_key: str | None = Query(default=None),
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+) -> dict:
+    resolved_api_key = x_api_key or api_key
+    if not resolved_api_key:
+        raise HTTPException(status_code=400, detail="API key is required")
+    deleted = rag_service.delete_document(resolved_api_key, document_id)
     return {"deleted_chunks": deleted}
 
 
