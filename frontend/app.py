@@ -14,7 +14,7 @@ if "history" not in st.session_state:
 
 with st.sidebar:
     st.header("Settings")
-    api_key = st.text_input("OpenAI API Key", type="password")
+    api_key = st.text_input("Groq API Key", type="password")
     chunk_size = st.number_input("Chunk size", min_value=200, max_value=4000, value=1000, step=100)
     chunk_overlap = st.number_input("Chunk overlap", min_value=0, max_value=1000, value=150, step=10)
     top_k = st.number_input("Top-K", min_value=1, max_value=20, value=4)

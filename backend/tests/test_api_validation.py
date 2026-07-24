@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 import httpx
-from openai import AuthenticationError, BadRequestError, RateLimitError
+from groq import AuthenticationError, BadRequestError, RateLimitError
 
 from app.main import app
 from app.api import routes

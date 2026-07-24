@@ -1,6 +1,6 @@
 from fastapi import APIRouter, File, Form, Header, HTTPException, Query, UploadFile
 import logging
-from openai import AuthenticationError, BadRequestError, RateLimitError
+from groq import AuthenticationError, BadRequestError, RateLimitError
 
 from app.core.config import DEFAULT_CHUNK_OVERLAP, DEFAULT_CHUNK_SIZE
 from app.evaluation.evaluator import Evaluator

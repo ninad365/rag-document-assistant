@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 
 from app.evaluation.metrics import (
     citation_correctness,
@@ -10,6 +10,8 @@ from app.evaluation.metrics import (
 )
 from app.models.schemas import EvaluationQuestion
 from app.rag.qa import RagService
+
+GROQ_MODEL_NAME = "llama-3.1-8b-instant"
 
 
 class JudgeResult(BaseModel):
@@ -34,7 +36,7 @@ class Evaluator:
         generated_answer: str,
         context: list[str],
     ) -> JudgeResult:
-        llm = ChatOpenAI(model="gpt-4o-mini", api_key=api_key, temperature=0)
+        llm = ChatGroq(model=GROQ_MODEL_NAME, api_key=api_key, temperature=0)
         structured = llm.with_structured_output(JudgeResult)
         return structured.invoke(
             """

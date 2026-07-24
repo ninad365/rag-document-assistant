@@ -2,7 +2,7 @@ import time
 import uuid
 from typing import Any
 
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 
 from app.core.config import DEFAULT_TOP_K
 from app.models.schemas import ChatMessage
@@ -10,6 +10,8 @@ from app.rag.chunking import chunk_documents
 from app.rag.document_loader import extract_pdf_pages
 from app.rag.prompts import build_answer_prompt, build_rewrite_prompt
 from app.rag.vector_store import get_vector_store, unique_documents
+
+GROQ_MODEL_NAME = "llama-3.1-8b-instant"
 
 
 class RagService:
@@ -59,7 +61,7 @@ class RagService:
     def _rewrite_question(self, api_key: str, history: list[ChatMessage], question: str) -> str:
         if not history:
             return question
-        llm = ChatOpenAI(model="gpt-4o-mini", api_key=api_key, temperature=0)
+        llm = ChatGroq(model=GROQ_MODEL_NAME, api_key=api_key, temperature=0)
         prompt = build_rewrite_prompt([msg.model_dump() for msg in history], question)
         return self._result_text(llm.invoke(prompt), "rewriting follow-up question")
 
@@ -96,7 +98,7 @@ class RagService:
                 "latency_ms": (time.perf_counter() - t0) * 1000,
             }
 
-        llm = ChatOpenAI(model="gpt-4o-mini", api_key=api_key, temperature=0)
+        llm = ChatGroq(model=GROQ_MODEL_NAME, api_key=api_key, temperature=0)
         answer = self._result_text(
             llm.invoke(build_answer_prompt("\n\n".join(context_lines), standalone_question)),
             "generating answer",
