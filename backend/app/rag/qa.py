@@ -27,7 +27,7 @@ class RagService:
         chunk_size: int,
         chunk_overlap: int,
     ) -> dict[str, Any]:
-        vector_store = get_vector_store(api_key)
+        vector_store = get_vector_store()
         all_chunks = []
         indexed = []
 
@@ -44,12 +44,12 @@ class RagService:
         return {"indexed_documents": indexed, "chunks_added": len(all_chunks)}
 
     def list_documents(self, api_key: str) -> list[dict[str, str]]:
-        vector_store = get_vector_store(api_key)
+        vector_store = get_vector_store()
         payload = vector_store.get(include=["metadatas"])
         return unique_documents(payload.get("metadatas", []))
 
     def delete_document(self, api_key: str, document_id: str) -> int:
-        vector_store = get_vector_store(api_key)
+        vector_store = get_vector_store()
         payload = vector_store.get(where={"document_id": document_id}, include=["metadatas"])
         ids = payload.get("ids", [])
         if ids:
@@ -73,7 +73,7 @@ class RagService:
         t0 = time.perf_counter()
         standalone_question = self._rewrite_question(api_key, history, question)
 
-        vector_store = get_vector_store(api_key)
+        vector_store = get_vector_store()
         results = vector_store.similarity_search_with_relevance_scores(standalone_question, k=top_k)
         chunks = []
         context_lines = []
