@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
 
 from app.core.config import DEFAULT_CHUNK_OVERLAP, DEFAULT_CHUNK_SIZE
 from app.evaluation.evaluator import Evaluator
@@ -24,11 +24,15 @@ def health() -> dict:
 
 @router.post("/documents/upload", response_model=UploadResponse)
 async def upload_documents(
-    api_key: str = Form(...),
+    api_key: str | None = Form(default=None),
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
     chunk_size: int = Form(DEFAULT_CHUNK_SIZE),
     chunk_overlap: int = Form(DEFAULT_CHUNK_OVERLAP),
     files: list[UploadFile] = File(...),
 ):
+    resolved_api_key = x_api_key or api_key
+    if not resolved_api_key:
+        raise HTTPException(status_code=400, detail="API key is required")
     if not files:
         raise HTTPException(status_code=400, detail="At least one PDF is required")
 
@@ -38,7 +42,7 @@ async def upload_documents(
             raise HTTPException(status_code=400, detail=f"Unsupported file: {file.filename}")
         payload.append((file.filename, await file.read()))
 
-    return rag_service.index_files(payload, api_key, chunk_size, chunk_overlap)
+    return rag_service.index_files(payload, resolved_api_key, chunk_size, chunk_overlap)
 
 
 @router.get("/documents", response_model=list[DocumentRecord])

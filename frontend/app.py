@@ -1,3 +1,5 @@
+import json
+
 import requests
 import streamlit as st
 
@@ -23,8 +25,15 @@ with st.sidebar:
             st.error("Provide API key and at least one PDF.")
         else:
             files = [("files", (f.name, f.read(), "application/pdf")) for f in uploads]
-            data = {"api_key": api_key, "chunk_size": chunk_size, "chunk_overlap": chunk_overlap}
-            res = requests.post(f"{BACKEND_URL}/documents/upload", files=files, data=data, timeout=120)
+            data = {"chunk_size": chunk_size, "chunk_overlap": chunk_overlap}
+            headers = {"X-API-Key": api_key}
+            res = requests.post(
+                f"{BACKEND_URL}/documents/upload",
+                files=files,
+                data=data,
+                headers=headers,
+                timeout=120,
+            )
             if res.ok:
                 st.success(f"Indexed {res.json()['chunks_added']} chunks")
             else:
@@ -85,8 +94,6 @@ with tab_eval:
     )
     if st.button("Run evaluation"):
         try:
-            import json
-
             dataset = json.loads(sample)
         except Exception:
             st.error("Invalid JSON")
