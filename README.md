@@ -1,6 +1,6 @@
 # rag-document-assistant
 
-A production-style, interview-ready multi-PDF RAG project with a FastAPI backend and Streamlit frontend.
+A production-style, multi-PDF RAG project with a FastAPI backend and Streamlit frontend.
 
 ## Overview
 
@@ -56,7 +56,7 @@ requirements.txt
 ## Installation
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```

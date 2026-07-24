@@ -1,9 +1,10 @@
 import json
+import os
 
 import requests
 import streamlit as st
 
-BACKEND_URL = st.secrets.get("backend_url", "http://localhost:8000")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 st.set_page_config(page_title="RAG Document Assistant", layout="wide")
 st.title("RAG Document Assistant")
@@ -73,6 +74,10 @@ with tab_chat:
 
     user_q = st.chat_input("Ask a question about uploaded PDFs")
     if user_q:
+        if not api_key:
+            st.error("Provide your OpenAI API key in the sidebar.")
+            st.stop()
+            
         st.session_state.history.append({"role": "user", "content": user_q})
         payload = {
             "api_key": api_key,
